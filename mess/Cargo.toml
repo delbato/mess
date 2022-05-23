@@ -1,0 +1,27 @@
+[package]
+name = "mess"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+mess-core = { path = "../mess-core" }
+mess-api = { path = "../mess-api" }
+
+mess-vm = { path = "../mess-vm", optional = true }
+mess-jit = { path = "../mess-jit", optional = true }
+
+[features]
+default = [
+    "exec-vm"
+]
+derive = [
+    "mess-api/derive"
+]
+exec-vm = [
+    "mess-vm"
+]
+exec-jit = [
+    "mess-jit"
+]

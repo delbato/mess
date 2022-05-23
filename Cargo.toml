@@ -1,0 +1,11 @@
+[workspace]
+members = [
+    "mess",
+    "mess-jit",
+    "mess-core",
+    "mess-vm",
+    "mess-sys",
+    "mess-api",
+    "mess-api/derive",
+    "mess-cli"
+]

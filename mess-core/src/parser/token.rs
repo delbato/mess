@@ -16,6 +16,9 @@ pub enum Token {
     #[token("ext")]
     Ext,
 
+    #[token("pub")]
+    Pub,
+
     #[token("intf")]
     Intf,
 

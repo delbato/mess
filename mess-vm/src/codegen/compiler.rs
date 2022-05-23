@@ -62,7 +62,11 @@ impl CompilerTrait for Compiler {
     type Output = OutputVM;
 
     fn get_output(&mut self) -> Self::Output {
-        unimplemented!("TODO: Implement");
+        let mut assembler = Assembler::new();
+        std::mem::swap(&mut assembler, &mut self.assembler);
+        let code = assembler.build();
+        OutputVM::new()
+            .with_code(code)
     }
 
     fn compile(&mut self, decl_list: &[Declaration]) -> StdResult<(), ()> {

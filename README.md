@@ -53,7 +53,7 @@ impl Printable for Vector {
 }
 
 // The main entry point
-fun main() {
+ext fun main() {
     // Variable declarations support auto typing
     var vec = Vector::new(2.0, 3.0);
     // Or manually specified types

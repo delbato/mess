@@ -9,6 +9,7 @@ use std::{
 #[derive(PartialEq, Debug)]
 pub struct Output {
     pub code: Vec<u8>,
+    pub function_name_map: HashMap<String, u64>,
     pub functions: HashMap<u64, usize>,
     //pub foreign_functions: HashMap<u64, Function>,
     pub static_pointers: BTreeMap<usize, Range<usize>>,
@@ -19,6 +20,7 @@ impl Output {
         Output {
             code: Vec::new(),
             functions: HashMap::new(),
+            function_name_map: HashMap::new(),
             //foreign_functions: HashMap::new(),
             static_pointers: BTreeMap::new(),
         }

@@ -106,10 +106,16 @@ impl Error for CoreError {}
 
 impl Executor for Core {
     type Input = OutputVM;
+    type Error = CoreError;
 
-    fn run_fn(&mut self, fn_name: &str) {}
+    fn run_fn(&mut self, fn_name: &str) -> Result<(), Self::Error> {
+        let program = self.program.as_ref().ok_or(CoreError::Unknown)?;
+        Err(CoreError::Unknown)
+    }
 
-    fn run(&mut self) {}
+    fn run(&mut self) -> Result<(), Self::Error> {
+        Err(CoreError::Unknown)
+    }
 
     fn set_input(&mut self, input: Self::Input) {
         self.program = Some(input);

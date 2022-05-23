@@ -6,6 +6,9 @@ pub mod token;
 
 pub mod error;
 
+#[cfg(test)]
+mod tests;
+
 use std::{
     collections::{
         HashMap,
@@ -33,23 +36,29 @@ use logos::{
 };
 use token::Token;
 
+use self::ast::InterfaceFunction;
+
 type Lexer<'l> = LogLexer<'l, Token>;
 
 /// The Parser
-pub struct Parser<S: AsRef<str>> {
+pub struct Parser {
     tokens: Vec<(Token, Range<usize>)>,
-    source: S,
+    source: String,
     token_pos: usize,
     yield_stack: VecDeque<Option<Expression>>,
 }
 
-impl<S: AsRef<str>> Parser<S> {
+impl Parser {
     /// Creates a new parser, wrapping the given source
-    pub fn new(source: S) -> Self {
+    pub fn new<S: ToString>(source: S) -> Self {
+        let source = source.to_string();
         let lexer = Token::lexer(source.as_ref());
         let tokens: Vec<(Token, Range<usize>)> =
-            lexer.spanned().map(|tuple| tuple.clone()).collect();
+            lexer.spanned().collect();
         //println!("Tokens: {:#?}", tokens);
+        for (token, range) in tokens.iter() {
+            println!("Token {:?}: \"{}\"", token, &source[range.clone()]);
+        }
         Self {
             tokens,
             source,
@@ -75,8 +84,7 @@ impl<S: AsRef<str>> Parser<S> {
 
     fn get_value(&self) -> Result<String> {
         let range = self.get_range()?;
-        let source_ref = self.source.as_ref();
-        let ret = String::from(&source_ref[range]);
+        let ret = String::from(&self.source[range]);
         Ok(ret)
     }
 
@@ -89,10 +97,7 @@ impl<S: AsRef<str>> Parser<S> {
 
     /// Parses the source into a root decl list
     pub fn parse(&mut self) -> Result<Vec<Declaration>> {
-        self.parse_decl_list(&[]).map_err(|err| {
-            //println!("Error with token value: {:#?}", self.get_value());
-            err
-        })
+        self.parse_decl_list(&[])
     }
 
     /// Parses a declaration list
@@ -103,18 +108,108 @@ impl<S: AsRef<str>> Parser<S> {
             if delims.contains(&token) {
                 break;
             }
-            if token == Token::Ext {
+
+            while [Token::Pub, Token::Ext].contains(&token) {
                 token = self.peek_token(1)?;
             }
+            
             let decl = match token {
                 Token::Fun => self.parse_decl_fn()?,
                 Token::Mod => self.parse_decl_mod()?,
                 Token::Cont => self.parse_decl_cont()?,
+                Token::Import => self.parse_decl_import()?,
+                Token::Intf => self.parse_decl_intf()?,
                 _ => return Err(Error::Unknown),
             };
             ret.push(decl);
         }
         Ok(ret)
+    }
+
+    pub fn parse_decl_intf(&mut self) -> Result<Declaration> {
+        let mut token = self.get_token()?;
+        if token != Token::Intf {
+            return Err(Error::ExpectedIntf);
+        }
+        self.token_pos += 1;
+
+        token = self.get_token()?;
+        if token != Token::Identifier {
+            return Err(Error::ExpectedIdentifier);
+        }
+        let intf_name = self.get_value()?;
+        self.token_pos += 1;
+
+        token = self.get_token()?;
+        if token != Token::OpenBlock {
+            return Err(Error::ExpectedOpenBlock);
+        }
+        self.token_pos += 1;
+
+        let intf_functions = self.parse_intf_functions()?;
+
+        Ok(Declaration::Interface {
+            name: intf_name,
+            functions: intf_functions
+        })
+    }
+
+    pub fn parse_intf_functions(&mut self) -> Result<Vec<InterfaceFunction>> {
+        let mut ret = vec![];
+        while self.get_token()? != Token::CloseBlock {
+            let intf_fn = self.parse_intf_function()?;
+            ret.push(intf_fn);
+        }
+        self.token_pos += 1;
+        Ok(ret)
+    }
+
+    pub fn parse_intf_function(&mut self) -> Result<InterfaceFunction> {
+        let mut token = self.get_token()?;
+        if token != Token::Fun {
+            return Err(Error::ExpectedFun);
+        }
+        self.token_pos += 1;
+
+        token = self.get_token()?;
+        if token != Token::Identifier {
+            return Err(Error::ExpectedIdentifier);
+        }
+        let fn_name = self.get_value()?;
+        self.token_pos += 1;
+
+        token = self.get_token()?;
+        if token != Token::OpenParan {
+            return Err(Error::ExpectedOpenParan);
+        }
+        self.token_pos += 1;
+
+        let fn_args = self.parse_fn_args()?;
+
+        token = self.get_token()?;
+        let mut ret_type = Type::Void;
+        if token == Token::Tilde {
+            self.token_pos += 1;
+            ret_type = self.parse_type()?;
+        }
+
+        token = self.get_token()?;
+        let mut stmt_list = None;
+        if token == Token::OpenBlock {
+            self.token_pos += 1;
+            stmt_list = Some(self.parse_stmt_list(&[ Token::CloseBlock ])?);
+        } else if token == Token::Semicolon {
+            self.token_pos += 1;
+        } else {
+            return Err(Error::ExpectedSemicolon);
+        }
+
+        Ok(InterfaceFunction {
+            name: fn_name,
+            returns: ret_type,
+            body: stmt_list,
+            arguments: fn_args
+        })
     }
 
     pub fn parse_decl_import(&mut self) -> Result<Declaration> {
@@ -123,12 +218,7 @@ impl<S: AsRef<str>> Parser<S> {
             return Err(Error::ExpectedImport);
         }
         self.token_pos += 1;
-
-        token = self.get_token()?;
-        if token != Token::Colon {
-            return Err(Error::ExpectedColon);
-        }
-        self.token_pos += 1;
+    
         let import_list = self.parse_multi_import(&[Token::Semicolon])?;
         Ok(Declaration::Import(import_list))
     }
@@ -232,16 +322,18 @@ impl<S: AsRef<str>> Parser<S> {
 
     /// Parses a function declaration
     pub fn parse_decl_fn(&mut self) -> Result<Declaration> {
-        let external = if self.get_token()? == Token::Ext {
-            self.token_pos += 1;
-            true
-        } else {
-            false
-        };
-
         let mut token = self.get_token()?;
+
+        let external = false;
+        let public = false;
+        while [Token::Pub, Token::Ext].contains(&token) {
+            let external = token == Token::Ext;
+            let public = token == Token::Pub;
+            self.token_pos += 1;
+        }
+
         if token != Token::Fun {
-            return Err(Error::ExpectedFn);
+            return Err(Error::ExpectedFun);
         }
         self.token_pos += 1;
 
@@ -250,6 +342,7 @@ impl<S: AsRef<str>> Parser<S> {
             return Err(Error::ExpectedIdentifier);
         }
         let ident_string = self.get_value()?;
+        println!("FN ident name: {}", ident_string);
         self.token_pos += 1;
 
         token = self.get_token()?;
@@ -282,6 +375,7 @@ impl<S: AsRef<str>> Parser<S> {
         };
 
         Ok(Declaration::Function {
+            public,
             external,
             name: ident_string,
             arguments: fn_args,
@@ -421,17 +515,31 @@ impl<S: AsRef<str>> Parser<S> {
     /// Parses a function declarations argument
     fn parse_fn_arg(&mut self) -> Result<(String, Type)> {
         let mut token = self.get_token()?;
+        if [Token::This, Token::ThisRef].contains(&token) {
+            self.token_pos += 1;
+            return match token {
+                Token::This => Ok((String::from("this"), Type::This)),
+                Token::ThisRef => Ok((String::from("this"), Type::Ref(Box::new(Type::This)))),
+                _ => Err(Error::Unknown)
+            };
+        }
         if token != Token::Identifier {
             return Err(Error::ExpectedIdentifier);
         }
         let ident_string = self.get_value()?;
         self.token_pos += 1;
 
-        token = self.get_token()?;
-        if token != Token::Colon {
-            return Err(Error::ExpectedColon);
+        if &ident_string == "this" {
+
+        } else {
+            token = self.get_token()?;
+            if token != Token::Colon {
+                return Err(Error::ExpectedColon);
+            }
+            self.token_pos += 1;
         }
-        self.token_pos += 1;
+
+        
 
         let var_type = self.parse_type()?;
         Ok((ident_string, var_type))
@@ -580,9 +688,10 @@ impl<S: AsRef<str>> Parser<S> {
 
         let var_expr = self.parse_expr(&[Token::Semicolon])?;
 
-        self.token_pos += 1;
+        token = self.get_token()?;
+        println!("Token after var expr parse: {:?}", token);
 
-        Ok(Statement::VarDeclarationStmt {
+        Ok(Statement::VarDeclaration {
             name: var_name,
             var_type,
             expr: var_expr,
@@ -697,7 +806,7 @@ impl<S: AsRef<str>> Parser<S> {
         while self.token_pos < self.tokens.len() {
             // Read a token
             let token = self.get_token()?;
-            if delims.contains(&token) && token == Token::CloseParan && paran_count == 0 {
+            if delims.contains(&token) || (token == Token::CloseParan && paran_count == 0) {
                 self.token_pos += 1;
                 break;
             }
@@ -727,12 +836,15 @@ impl<S: AsRef<str>> Parser<S> {
                     _ => {
                         let op = &mut op;
                         while !op_stack.is_empty() {
-                            if Operator::from(last_token.clone()).is_some() {
-                                *op = match op {
-                                    Operator::Minus => Operator::Neg,
-                                    Operator::Plus => Operator::Pos,
-                                    _ => return Err(Error::Unknown),
-                                };
+                            let last_op_opt = Operator::from(last_token.clone());
+                            if let Some(last_op) = last_op_opt {
+                                if last_op != Operator::Assign {
+                                    *op = match op {
+                                        Operator::Minus => Operator::Neg,
+                                        Operator::Plus => Operator::Pos,
+                                        _ => return Err(Error::Unknown),
+                                    };
+                                }
                             }
                             let op_front = op_stack.pop_front().unwrap();
                             if op_front.prec() > op.prec() {

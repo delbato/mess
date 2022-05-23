@@ -43,6 +43,12 @@ pub enum Token {
     #[token("import")]
     Import,
 
+    #[token("this")]
+    This,
+
+    #[token("&this")]
+    ThisRef,
+
     #[token("else")]
     Else,
 
@@ -87,6 +93,12 @@ pub enum Token {
 
     #[token(">=")]
     GreaterThanEquals,
+
+    #[token("==")]
+    Equals,
+
+    #[token("!=")]
+    NotEquals,
 
     #[token("+=")]
     AddAssign,
@@ -136,8 +148,11 @@ pub enum Token {
     #[token("}")]
     CloseBlock,
 
-    #[regex("[a-zA-Z_]+[a-zA-Z0-9_]*")]
+    #[regex("[a-zA-Z_][a-zA-Z0-9_]*")]
     Identifier,
+
+    #[regex("\".*\"")]
+    StringLiteral,
 
     #[regex(r"[0-9]+")]
     IntLiteral,

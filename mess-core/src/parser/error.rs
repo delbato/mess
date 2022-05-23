@@ -14,7 +14,8 @@ pub type Result<T> = StdResult<T, Error>;
 pub enum Error {
     Unknown,
     Unimplemented(&'static str),
-    ExpectedFn,
+    ExpectedFun,
+    ExpectedIntf,
     ExpectedEnum,
     ExpectedOpenBlock,
     ExpectedOn,

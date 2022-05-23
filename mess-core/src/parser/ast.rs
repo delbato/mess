@@ -5,6 +5,7 @@ use super::Token;
 #[derive(Debug, Clone)]
 pub enum Declaration {
     Function {
+        public: bool,
         external: bool,
         name: String,
         returns: Type,
@@ -17,17 +18,35 @@ pub enum Declaration {
     },
     Container {
         name: String,
-        members: HashMap<String, Type>,
+        member_variables: HashMap<String, Type>,
+        member_functions: Vec<ContainerFunction>
     },
     Interface {
         name: String,
-        functions: HashMap<String, (Vec<(String, Type)>, Option<Vec<Statement>>, Type)>,
+        functions: Vec<InterfaceFunction>,
     },
     Enum {
         name: String,
         variants: Vec<EnumVariant>,
     },
     Import(Vec<(String, String)>),
+}
+
+#[derive(Debug, Clone)]
+pub struct ContainerFunction {
+    pub public: bool,
+    pub name: String,
+    pub returns: Type,
+    pub arguments: Vec<(String, Type)>,
+    pub body: Vec<Statement>
+}
+
+#[derive(Debug, Clone)]
+pub struct InterfaceFunction {
+    pub name: String,
+    pub returns: Type,
+    pub arguments: Vec<(String, Type)>,
+    pub body: Option<Vec<Statement>>,
 }
 
 #[derive(Debug, Clone)]
@@ -46,7 +65,7 @@ pub struct ContMember {
 
 #[derive(Debug, Clone)]
 pub enum Statement {
-    VarDeclarationStmt {
+    VarDeclaration {
         name: String,
         var_type: Type,
         expr: Expression,
@@ -106,6 +125,8 @@ impl Operator {
             Token::GreaterThanEquals => Some(Operator::GreaterThanEquals),
             Token::Ref => Some(Operator::Ref),
             Token::Tilde => Some(Operator::Deref),
+            Token::Equals => Some(Operator::Equals),
+            Token::NotEquals => Some(Operator::NotEquals),
             Token::AddAssign => Some(Operator::AddAssign),
             Token::SubAssign => Some(Operator::SubAssign),
             Token::MulAssign => Some(Operator::MulAssign),
@@ -124,6 +145,8 @@ impl Operator {
             Operator::LessThanEquals => 0,
             Operator::GreaterThan => 0,
             Operator::GreaterThanEquals => 0,
+            Operator::Equals => 0,
+            Operator::NotEquals => 0,
             Operator::Times => 3,
             Operator::Divide => 3,
             Operator::Ref => 4,
@@ -141,14 +164,7 @@ impl Operator {
     }
 
     pub fn unary(&self) -> bool {
-        match self {
-            Operator::Pos => true,
-            Operator::Neg => true,
-            Operator::Ref => true,
-            Operator::Deref => true,
-            Operator::Not => true,
-            _ => false,
-        }
+        matches!(self, Operator::Pos | Operator::Neg | Operator::Ref |Operator::Deref | Operator::Not)
     }
 }
 
@@ -179,6 +195,7 @@ pub enum Type {
     Float,
     Bool,
     String,
+    This,
     Tuple(Vec<Type>),
     Named(String),
     Ref(Box<Type>),

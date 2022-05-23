@@ -221,6 +221,7 @@ impl Compiler {
     pub fn compile_decl_fn(&mut self, decl: &Declaration) -> Result<()> {
         let (name, ret_type, args, stmt_list) = match decl {
             Declaration::Function {
+                public: false,
                 external: false,
                 name,
                 arguments,
@@ -266,7 +267,7 @@ impl Compiler {
 
     pub fn compile_stmt(&mut self, stmt: &Statement) -> Result<()> {
         match stmt {
-            Statement::VarDeclarationStmt { .. } => self.compile_stmt_var_decl(stmt)?,
+            Statement::VarDeclaration { .. } => self.compile_stmt_var_decl(stmt)?,
             Statement::ExpressionStmt(_) => self.compile_stmt_expr(stmt)?,
             Statement::Return(_) => self.compile_stmt_return(stmt)?,
             _ => return Err(Error::Unknown),
@@ -323,7 +324,7 @@ impl Compiler {
 
     pub fn compile_stmt_var_decl(&mut self, stmt: &Statement) -> Result<()> {
         let (var_name, mut var_type, var_expr) = match stmt {
-            Statement::VarDeclarationStmt {
+            Statement::VarDeclaration {
                 name,
                 var_type,
                 expr,

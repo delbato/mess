@@ -5,7 +5,7 @@ use crate::parser::Parser;
 type Result = StdResult<(), Box<dyn Error>>;
 
 #[test]
-fn test_parser_intf_simple() -> Result {
+fn test_parse_intf_simple() -> Result {
     let code = "
     intf ToString {
         fun to_string(&this) ~ String;

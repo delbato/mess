@@ -36,7 +36,7 @@ use logos::{
 };
 use token::Token;
 
-use self::ast::InterfaceFunction;
+use self::ast::{InterfaceFunction, ContainerFunction};
 
 type Lexer<'l> = LogLexer<'l, Token>;
 
@@ -80,6 +80,10 @@ impl Parser {
             .get(pos as usize)
             .map(|(token, _range)| token.clone())
             .ok_or(Error::Unknown)
+    }
+
+    fn advance(&mut self) {
+        self.token_pos += 1;
     }
 
     fn get_value(&self) -> Result<String> {
@@ -131,20 +135,20 @@ impl Parser {
         if token != Token::Intf {
             return Err(Error::ExpectedIntf);
         }
-        self.token_pos += 1;
+        self.advance();
 
         token = self.get_token()?;
         if token != Token::Identifier {
             return Err(Error::ExpectedIdentifier);
         }
         let intf_name = self.get_value()?;
-        self.token_pos += 1;
+        self.advance();
 
         token = self.get_token()?;
         if token != Token::OpenBlock {
             return Err(Error::ExpectedOpenBlock);
         }
-        self.token_pos += 1;
+        self.advance();
 
         let intf_functions = self.parse_intf_functions()?;
 
@@ -160,7 +164,7 @@ impl Parser {
             let intf_fn = self.parse_intf_function()?;
             ret.push(intf_fn);
         }
-        self.token_pos += 1;
+        self.advance();
         Ok(ret)
     }
 
@@ -169,37 +173,37 @@ impl Parser {
         if token != Token::Fun {
             return Err(Error::ExpectedFun);
         }
-        self.token_pos += 1;
+        self.advance();
 
         token = self.get_token()?;
         if token != Token::Identifier {
             return Err(Error::ExpectedIdentifier);
         }
         let fn_name = self.get_value()?;
-        self.token_pos += 1;
+        self.advance();
 
         token = self.get_token()?;
         if token != Token::OpenParan {
             return Err(Error::ExpectedOpenParan);
         }
-        self.token_pos += 1;
+        self.advance();
 
         let fn_args = self.parse_fn_args()?;
 
         token = self.get_token()?;
         let mut ret_type = Type::Void;
         if token == Token::Tilde {
-            self.token_pos += 1;
+            self.advance();
             ret_type = self.parse_type()?;
         }
 
         token = self.get_token()?;
         let mut stmt_list = None;
         if token == Token::OpenBlock {
-            self.token_pos += 1;
+            self.advance();
             stmt_list = Some(self.parse_stmt_list(&[ Token::CloseBlock ])?);
         } else if token == Token::Semicolon {
-            self.token_pos += 1;
+            self.advance();
         } else {
             return Err(Error::ExpectedSemicolon);
         }
@@ -217,7 +221,7 @@ impl Parser {
         if token != Token::Import {
             return Err(Error::ExpectedImport);
         }
-        self.token_pos += 1;
+        self.advance();
     
         let import_list = self.parse_multi_import(&[Token::Semicolon])?;
         Ok(Declaration::Import(import_list))
@@ -228,26 +232,26 @@ impl Parser {
         if token != Token::Enum {
             return Err(Error::ExpectedEnum);
         }
-        self.token_pos += 1;
+        self.advance();
 
         token = self.get_token()?;
         if token != Token::Colon {
             return Err(Error::ExpectedColon);
         }
-        self.token_pos += 1;
+        self.advance();
 
         token = self.get_token()?;
         if token != Token::Identifier {
             return Err(Error::ExpectedIdentifier);
         }
         let ident_string = self.get_value()?;
-        self.token_pos += 1;
+        self.advance();
 
         token = self.get_token()?;
         if token != Token::OpenBlock {
             return Err(Error::ExpectedOpenBlock);
         }
-        self.token_pos += 1;
+        self.advance();
 
         let variants = self.parse_enum_variants()?;
 
@@ -267,13 +271,13 @@ impl Parser {
             return Err(Error::ExpectedIdentifier);
         }
         let ident_string = self.get_value()?;
-        self.token_pos += 1;
+        self.advance();
 
         token = self.get_token()?;
 
         let ret = match token {
             Token::OpenBlock => {
-                self.token_pos += 1;
+                self.advance();
                 token = self.get_token()?;
                 let mut members = HashMap::new();
                 while token != Token::CloseBlock {
@@ -281,19 +285,19 @@ impl Parser {
                         return Err(Error::ExpectedIdentifier);
                     }
                     let member_name = self.get_value()?;
-                    self.token_pos += 1;
+                    self.advance();
 
                     token = self.get_token()?;
                     if token != Token::Colon {
                         return Err(Error::ExpectedColon);
                     }
-                    self.token_pos += 1;
+                    self.advance();
 
                     let member_type = self.parse_type()?;
                     members.insert(member_name, member_type);
                     token = self.get_token()?;
                     if token == Token::Comma {
-                        self.token_pos += 1;
+                        self.advance();
                         token = self.get_token()?;
                     } else {
                         break;
@@ -329,13 +333,13 @@ impl Parser {
         while [Token::Pub, Token::Ext].contains(&token) {
             let external = token == Token::Ext;
             let public = token == Token::Pub;
-            self.token_pos += 1;
+            self.advance();
         }
 
         if token != Token::Fun {
             return Err(Error::ExpectedFun);
         }
-        self.token_pos += 1;
+        self.advance();
 
         token = self.get_token()?;
         if token != Token::Identifier {
@@ -343,31 +347,31 @@ impl Parser {
         }
         let ident_string = self.get_value()?;
         println!("FN ident name: {}", ident_string);
-        self.token_pos += 1;
+        self.advance();
 
         token = self.get_token()?;
         if token != Token::OpenParan {
             return Err(Error::ExpectedOpenParan);
         }
-        self.token_pos += 1;
+        self.advance();
 
         let fn_args = self.parse_fn_args()?;
         let mut ret_type = Type::Void;
 
         token = self.get_token()?;
         if token == Token::Tilde {
-            self.token_pos += 1;
+            self.advance();
             ret_type = self.parse_type()?;
         }
 
         token = self.get_token()?;
         let stmt_list: Option<Vec<Statement>> = match token {
             Token::Semicolon => {
-                self.token_pos += 1;
+                self.advance();
                 None
             }
             Token::OpenBlock => {
-                self.token_pos += 1;
+                self.advance();
                 let stmt_list = self.parse_stmt_list(&[Token::CloseBlock])?;
                 Some(stmt_list)
             }
@@ -398,29 +402,29 @@ impl Parser {
             ])?;
             token = self.get_token()?;
             if token == Token::Comma {
-                self.token_pos += 1;
+                self.advance();
                 token = self.get_token()?;
             }
             match token {
                 Token::Assign => {
-                    self.token_pos += 1;
+                    self.advance();
                     token = self.get_token()?;
                     if token != Token::Identifier {
                         return Err(Error::ExpectedIdentifier);
                     }
                     import_as = self.get_value()?;
-                    self.token_pos += 1;
+                    self.advance();
 
                     ret.push((import_path, import_as));
 
                     token = self.get_token()?;
                     if token == Token::Comma {
-                        self.token_pos += 1;
+                        self.advance();
                         token = self.get_token()?;
                     }
                 }
                 Token::OpenBlock => {
-                    self.token_pos += 1;
+                    self.advance();
                     if !import_path.ends_with("::") {
                         return Err(Error::MalformedImport);
                     }
@@ -430,11 +434,11 @@ impl Parser {
                     for (imp_path, _) in nested_imports.iter_mut() {
                         *imp_path = format!("{}{}", import_path, imp_path);
                     }
-                    self.token_pos += 1;
+                    self.advance();
 
                     token = self.get_token()?;
                     if token == Token::Comma {
-                        self.token_pos += 1;
+                        self.advance();
                         token = self.get_token()?;
                     }
 
@@ -458,20 +462,20 @@ impl Parser {
             match token {
                 Token::Identifier => {
                     import_path += &self.get_value()?;
-                    self.token_pos += 1;
+                    self.advance();
                 }
                 Token::DoubleColon => {
                     import_path += "::";
-                    self.token_pos += 1;
+                    self.advance();
                 }
                 Token::Assign => {
-                    self.token_pos += 1;
+                    self.advance();
                     token = self.get_token()?;
                     if token != Token::Identifier {
                         return Err(Error::ExpectedIdentifier);
                     }
                     import_as = String::from(self.get_value()?);
-                    self.token_pos += 1;
+                    self.advance();
                 }
                 _ => return Err(Error::MalformedImport),
             };
@@ -503,12 +507,12 @@ impl Parser {
             args.push(fn_arg);
             token = self.get_token()?;
             if token == Token::Comma {
-                self.token_pos += 1;
+                self.advance();
             } else if token != Token::CloseParan {
                 return Err(Error::ExpectedCloseParan);
             }
         }
-        self.token_pos += 1;
+        self.advance();
         Ok(args)
     }
 
@@ -516,7 +520,7 @@ impl Parser {
     fn parse_fn_arg(&mut self) -> Result<(String, Type)> {
         let mut token = self.get_token()?;
         if [Token::This, Token::ThisRef].contains(&token) {
-            self.token_pos += 1;
+            self.advance();
             return match token {
                 Token::This => Ok((String::from("this"), Type::This)),
                 Token::ThisRef => Ok((String::from("this"), Type::Ref(Box::new(Type::This)))),
@@ -527,7 +531,7 @@ impl Parser {
             return Err(Error::ExpectedIdentifier);
         }
         let ident_string = self.get_value()?;
-        self.token_pos += 1;
+        self.advance();
 
         if &ident_string == "this" {
 
@@ -536,7 +540,7 @@ impl Parser {
             if token != Token::Colon {
                 return Err(Error::ExpectedColon);
             }
-            self.token_pos += 1;
+            self.advance();
         }
 
         
@@ -549,18 +553,18 @@ impl Parser {
         let token = self.get_token()?;
         let ret = match token {
             Token::Ref => {
-                self.token_pos += 1;
+                self.advance();
                 let inner_type = self.parse_type()?;
                 Type::Ref(Box::new(inner_type))
             }
             Token::Identifier => {
                 let ident_value = self.get_value()?;
-                self.token_pos += 1;
+                self.advance();
                 Type::Named(ident_value)
             }
             Token::PrimitiveType => {
                 let token_val = self.get_value()?;
-                self.token_pos += 1;
+                self.advance();
                 match token_val.as_str() {
                     "int" => Type::Int,
                     "float" => Type::Float,
@@ -576,12 +580,145 @@ impl Parser {
 
     /// Parses a module declaration
     pub fn parse_decl_mod(&mut self) -> Result<Declaration> {
-        Err(Error::Unknown)
+        Err(Error::Unimplemented("mod decl"))
     }
 
     /// Parses a container declaration
     pub fn parse_decl_cont(&mut self) -> Result<Declaration> {
-        Err(Error::Unknown)
+        let mut token = self.get_token()?;
+
+        let mut public = false;
+        if token == Token::Pub {
+            public = true;
+            self.advance();
+            token = self.get_token()?;
+        }
+
+        if token != Token::Cont {
+            return Err(Error::ExpectedCont);
+        }
+        self.advance();
+        
+        token = self.get_token()?;
+        if token != Token::Identifier {
+            return Err(Error::ExpectedIdentifier);
+        }
+        let cont_name = self.get_value()?;
+        self.advance();
+
+        token = self.get_token()?;
+        if token != Token::OpenBlock {
+            return Err(Error::ExpectedOpenBlock);
+        }
+        self.advance();
+
+        token = self.get_token()?;
+
+        let mut member_vars = HashMap::new();
+        let mut member_fns = vec![];
+
+        while token != Token::CloseBlock {
+            let mut public = false;
+            if token == Token::Pub {
+                public = true;
+                self.advance();
+                token = self.get_token()?;
+            }
+            match token {
+                Token::Identifier => {
+                    let member_var = self.parse_cont_member_var(public)?;
+                    member_vars.insert(member_var.0, member_var.1);
+                }
+                Token::Fun => {
+                    let member_fn = self.parse_cont_member_fun(public)?;
+                    member_fns.push(member_fn);
+                },
+                _ => return Err(Error::Unknown)
+            }
+            token = self.get_token()?;
+        }
+
+        self.advance();
+
+        Ok(Declaration::Container {
+            name: cont_name,
+            member_functions: member_fns,
+            member_variables: member_vars
+        })
+
+    }
+
+    pub fn parse_cont_member_fun(&mut self, public: bool) -> Result<ContainerFunction> {
+        let mut token = self.get_token()?;
+        if token != Token::Fun {
+            return Err(Error::ExpectedFun);
+        }
+        self.advance();
+
+        token = self.get_token()?;
+        if token != Token::Identifier {
+            return Err(Error::ExpectedIdentifier);
+        }
+        let fn_name = self.get_value()?;
+        self.advance();
+
+        token = self.get_token()?;
+        if token != Token::OpenParan {
+            return Err(Error::ExpectedOpenParan);
+        }
+        self.advance();
+
+        let fn_args = self.parse_fn_args()?;
+
+        token = self.get_token()?;
+        let ret_type = if token == Token::Tilde {
+            self.advance();
+            token = self.get_token()?;
+            self.parse_type()?
+        } else {
+            Type::Void
+        };
+
+        token = self.get_token()?;
+        if token != Token::OpenBlock {
+            return Err(Error::ExpectedOpenBlock);
+        }
+        self.advance();
+
+        let stmt_list = self.parse_stmt_list(&[Token::CloseBlock])?;
+
+        Ok(ContainerFunction {
+            name: fn_name,
+            arguments: fn_args,
+            public,
+            body: stmt_list,
+            returns: ret_type
+        })
+    }
+
+    pub fn parse_cont_member_var(&mut self, public: bool) -> Result<(String, Type)> {
+        let mut token = self.get_token()?;
+        if token != Token::Identifier {
+            return Err(Error::ExpectedIdentifier);
+        }
+        let var_name = self.get_value()?;
+        self.advance();
+
+        token = self.get_token()?;
+        if token != Token::Colon {
+            return Err(Error::ExpectedColon);
+        }
+        self.advance();
+
+        let var_type = self.parse_type()?;
+        
+        token = self.get_token()?;
+        if token != Token::Semicolon {
+            return Err(Error::ExpectedSemicolon);
+        }
+        self.advance();
+
+        Ok((var_name, var_type))
     }
 
     pub fn parse_stmt_list(&mut self, delims: &[Token]) -> Result<Vec<Statement>> {
@@ -589,7 +726,7 @@ impl Parser {
         while self.token_pos < self.tokens.len() {
             let token = self.get_token()?;
             if delims.contains(&token) {
-                self.token_pos += 1;
+                self.advance();
                 break;
             }
             let stmt = self.parse_stmt()?;
@@ -605,7 +742,7 @@ impl Parser {
             Token::On => self.parse_stmt_on(),
             Token::While => self.parse_stmt_while(),
             Token::Yield => {
-                self.token_pos += 1;
+                self.advance();
                 let _next_token = self.get_token()?;
                 let expr_opt = if token != Token::Semicolon {
                     let expr = self.parse_expr(&[Token::Semicolon])?;
@@ -622,7 +759,7 @@ impl Parser {
                 Ok(Statement::Yield(expr_opt))
             }
             Token::Return => {
-                self.token_pos += 1;
+                self.advance();
                 let _next_token = self.get_token()?;
                 let expr_opt = if token != Token::Semicolon {
                     let expr = self.parse_expr(&[Token::Semicolon])?;
@@ -633,7 +770,7 @@ impl Parser {
                 Ok(Statement::Return(expr_opt))
             }
             Token::Continue => {
-                self.token_pos += 1;
+                self.advance();
                 let next_token = self.get_token()?;
                 if next_token != Token::Semicolon {
                     Err(Error::ExpectedSemicolon)
@@ -642,7 +779,7 @@ impl Parser {
                 }
             }
             Token::Break => {
-                self.token_pos += 1;
+                self.advance();
                 let next_token = self.get_token()?;
                 if next_token != Token::Semicolon {
                     Err(Error::ExpectedSemicolon)
@@ -662,19 +799,19 @@ impl Parser {
         if token != Token::Var {
             return Err(Error::ExpectedVar);
         }
-        self.token_pos += 1;
+        self.advance();
 
         token = self.get_token()?;
         if token != Token::Identifier {
             return Err(Error::ExpectedIdentifier);
         }
         let var_name = self.get_value()?;
-        self.token_pos += 1;
+        self.advance();
 
         token = self.get_token()?;
         let var_type = match token {
             Token::Colon => {
-                self.token_pos += 1;
+                self.advance();
                 self.parse_type()?
             }
             _ => Type::Auto,
@@ -684,7 +821,7 @@ impl Parser {
         if token != Token::Assign {
             return Err(Error::ExpectedAssign);
         }
-        self.token_pos += 1;
+        self.advance();
 
         let var_expr = self.parse_expr(&[Token::Semicolon])?;
 
@@ -703,7 +840,7 @@ impl Parser {
         if token != Token::On {
             return Err(Error::ExpectedOn);
         }
-        self.token_pos += 1;
+        self.advance();
 
         let cond_expr = self.parse_expr(&[Token::OpenBlock])?;
         let cond_body = self.parse_stmt_list(&[Token::CloseBlock])?;
@@ -740,7 +877,7 @@ impl Parser {
         if token != Token::On {
             return Err(Error::ExpectedOn);
         }
-        self.token_pos += 1;
+        self.advance();
         self.yield_stack.push_front(None);
         let cond_expr = self.parse_expr(&[Token::OpenBlock])?;
         let cond_body = self.parse_stmt_list(&[Token::CloseBlock])?;
@@ -780,7 +917,7 @@ impl Parser {
         if token != Token::While {
             return Err(Error::ExpectedWhile);
         }
-        self.token_pos += 1;
+        self.advance();
 
         let while_expr = self.parse_expr(&[Token::OpenBlock])?;
         let while_body = self.parse_stmt_list(&[Token::CloseBlock])?;
@@ -807,7 +944,7 @@ impl Parser {
             // Read a token
             let token = self.get_token()?;
             if delims.contains(&token) || (token == Token::CloseParan && paran_count == 0) {
-                self.token_pos += 1;
+                self.advance();
                 break;
             }
             // If it is an operator
@@ -881,7 +1018,7 @@ impl Parser {
                 let expr = self.parse_expr_non_arithmetic(&token)?;
                 out_queue.push_back(ExprOutput::Expression(expr));
             }
-            self.token_pos += 1;
+            self.advance();
             last_token = self.peek_token(-1)?;
         }
 
@@ -965,13 +1102,13 @@ impl Parser {
             return Err(Error::ExpectedIdentifier);
         }
         let ident_string = self.get_value()?;
-        self.token_pos += 1;
+        self.advance();
 
         token = self.get_token()?;
         if token != Token::OpenParan {
             return Err(Error::ExpectedOpenParan);
         }
-        self.token_pos += 1;
+        self.advance();
         let call_args = self.parse_expr_call_args()?;
         Ok(Expression::Call(ident_string, call_args))
     }

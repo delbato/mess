@@ -17,6 +17,7 @@ pub enum Declaration {
         decl_list: Vec<Declaration>,
     },
     Container {
+        public: bool,
         name: String,
         member_variables: HashMap<String, Type>,
         member_functions: Vec<ContainerFunction>

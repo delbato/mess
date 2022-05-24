@@ -31,14 +31,11 @@ use error::{
     Result,
 };
 use logos::{
-    Lexer as LogLexer,
     Logos,
 };
 use token::Token;
 
 use self::ast::{InterfaceFunction, ContainerFunction};
-
-type Lexer<'l> = LogLexer<'l, Token>;
 
 /// The Parser
 pub struct Parser {
@@ -130,6 +127,7 @@ impl Parser {
         Ok(ret)
     }
 
+    /// Parses an interface declaration
     pub fn parse_decl_intf(&mut self) -> Result<Declaration> {
         let mut token = self.get_token()?;
         if token != Token::Intf {
@@ -158,6 +156,7 @@ impl Parser {
         })
     }
 
+    /// Parses interface functions
     pub fn parse_intf_functions(&mut self) -> Result<Vec<InterfaceFunction>> {
         let mut ret = vec![];
         while self.get_token()? != Token::CloseBlock {
@@ -168,6 +167,7 @@ impl Parser {
         Ok(ret)
     }
 
+    /// Parses a single interface function
     pub fn parse_intf_function(&mut self) -> Result<InterfaceFunction> {
         let mut token = self.get_token()?;
         if token != Token::Fun {
@@ -216,8 +216,9 @@ impl Parser {
         })
     }
 
+    /// Parses an import declaration
     pub fn parse_decl_import(&mut self) -> Result<Declaration> {
-        let mut token = self.get_token()?;
+        let token = self.get_token()?;
         if token != Token::Import {
             return Err(Error::ExpectedImport);
         }
@@ -227,6 +228,7 @@ impl Parser {
         Ok(Declaration::Import(import_list))
     }
 
+    /// Parses an enum declaration
     pub fn parse_decl_enum(&mut self) -> Result<Declaration> {
         let mut token = self.get_token()?;
         if token != Token::Enum {
@@ -265,6 +267,7 @@ impl Parser {
         Err(Error::Unimplemented("hu"))
     }
 
+    #[allow(dead_code)]
     fn parse_enum_variant(&mut self) -> Result<EnumVariant> {
         let mut token = self.get_token()?;
         if token != Token::Identifier {
@@ -328,11 +331,11 @@ impl Parser {
     pub fn parse_decl_fn(&mut self) -> Result<Declaration> {
         let mut token = self.get_token()?;
 
-        let external = false;
-        let public = false;
+        let mut external = false;
+        let mut public = false;
         while [Token::Pub, Token::Ext].contains(&token) {
-            let external = token == Token::Ext;
-            let public = token == Token::Pub;
+            external = token == Token::Ext;
+            public = token == Token::Pub;
             self.advance();
         }
 
@@ -474,7 +477,7 @@ impl Parser {
                     if token != Token::Identifier {
                         return Err(Error::ExpectedIdentifier);
                     }
-                    import_as = String::from(self.get_value()?);
+                    import_as = self.get_value()?;
                     self.advance();
                 }
                 _ => return Err(Error::MalformedImport),
@@ -489,7 +492,7 @@ impl Parser {
         if import_as.is_empty() && !import_path.ends_with("::") {
             let last_opt = import_path.split("::").last();
             if let Some(last) = last_opt {
-                import_as += &last;
+                import_as += last;
             } else {
                 import_as = import_path.clone();
             }
@@ -641,6 +644,7 @@ impl Parser {
         self.advance();
 
         Ok(Declaration::Container {
+            public,
             name: cont_name,
             member_functions: member_fns,
             member_variables: member_vars
@@ -648,6 +652,7 @@ impl Parser {
 
     }
 
+    /// Parses a container member function
     pub fn parse_cont_member_fun(&mut self, public: bool) -> Result<ContainerFunction> {
         let mut token = self.get_token()?;
         if token != Token::Fun {
@@ -696,7 +701,8 @@ impl Parser {
         })
     }
 
-    pub fn parse_cont_member_var(&mut self, public: bool) -> Result<(String, Type)> {
+    /// Parses a container member variable
+    pub fn parse_cont_member_var(&mut self, _public: bool) -> Result<(String, Type)> {
         let mut token = self.get_token()?;
         if token != Token::Identifier {
             return Err(Error::ExpectedIdentifier);
@@ -721,6 +727,7 @@ impl Parser {
         Ok((var_name, var_type))
     }
 
+    /// Parses a statement list, breaking on a set of given delimiters
     pub fn parse_stmt_list(&mut self, delims: &[Token]) -> Result<Vec<Statement>> {
         let mut statements = vec![];
         while self.token_pos < self.tokens.len() {
@@ -735,6 +742,7 @@ impl Parser {
         Ok(statements)
     }
 
+    /// Parses a single statement
     pub fn parse_stmt(&mut self) -> Result<Statement> {
         let token = self.get_token()?;
         match token {
@@ -794,6 +802,7 @@ impl Parser {
         }
     }
 
+    /// Parses a variable declaration statement
     pub fn parse_stmt_var_decl(&mut self) -> Result<Statement> {
         let mut token = self.get_token()?;
         if token != Token::Var {
@@ -835,6 +844,7 @@ impl Parser {
         })
     }
 
+    /// Parses a conditional statement
     pub fn parse_stmt_on(&mut self) -> Result<Statement> {
         let mut token = self.get_token()?;
         if token != Token::On {
@@ -872,6 +882,7 @@ impl Parser {
         })
     }
 
+    /// Parses a conditional expression
     pub fn parse_expr_on(&mut self) -> Result<Expression> {
         let mut token = self.get_token()?;
         if token != Token::On {
@@ -912,6 +923,7 @@ impl Parser {
         })
     }
 
+    /// Parses a while statement
     pub fn parse_stmt_while(&mut self) -> Result<Statement> {
         let token = self.get_token()?;
         if token != Token::While {

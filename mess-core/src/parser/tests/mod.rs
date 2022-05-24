@@ -1,4 +1,4 @@
-//mod intf;
+mod intf;
 
 mod cont;
 
@@ -7,9 +7,6 @@ use std::{result::Result as StdResult, error::Error};
 
 type Result = StdResult<(), Box<dyn Error>>;
 
-
-
-/*
 #[test]
 fn test_parse_empty_fn() {
     let code = "
@@ -86,4 +83,4 @@ fn test_parse_complex_on() -> Result {
     let decl_list = parser.parse()?;
     println!("{:#?}", decl_list);
     Ok(())
-}*/
+}

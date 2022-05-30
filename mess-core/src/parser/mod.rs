@@ -12,10 +12,10 @@ mod tests;
 use std::{
     collections::{
         HashMap,
-        VecDeque,
+        VecDeque, BTreeMap,
     },
     convert::AsRef,
-    ops::Range,
+    ops::Range, path::{Path, PathBuf},
 };
 
 use ast::{
@@ -43,6 +43,7 @@ pub struct Parser {
     source: String,
     token_pos: usize,
     yield_stack: VecDeque<Option<Expression>>,
+    current_path: Option<PathBuf>
 }
 
 impl Parser {
@@ -52,15 +53,32 @@ impl Parser {
         let lexer = Token::lexer(source.as_ref());
         let tokens: Vec<(Token, Range<usize>)> =
             lexer.spanned().collect();
-        //println!("Tokens: {:#?}", tokens);
-        for (token, range) in tokens.iter() {
-            println!("Token {:?}: \"{}\"", token, &source[range.clone()]);
-        }
         Self {
             tokens,
             source,
             token_pos: 0,
+            current_path: None,
             yield_stack: VecDeque::new(),
+        }
+    }
+
+    /// Creates a new parser, using the given file path
+    pub fn new_with_path<P: AsRef<Path>>(path: P) -> Self {
+        let path = path.as_ref();
+        if !path.is_file() {
+            panic!("Given path is not a file!");
+        }
+        let path = std::fs::canonicalize(path).unwrap();
+        let source = std::fs::read_to_string(&path).expect("Could not read source file!");
+        let lexer = Token::lexer(source.as_ref());
+        let tokens: Vec<(Token, Range<usize>)> =
+            lexer.spanned().collect();
+        Self {
+            source,
+            tokens,
+            token_pos: 0,
+            current_path: Some(path),
+            yield_stack: VecDeque::new()
         }
     }
 
@@ -120,6 +138,7 @@ impl Parser {
                 Token::Cont => self.parse_decl_cont()?,
                 Token::Import => self.parse_decl_import()?,
                 Token::Intf => self.parse_decl_intf()?,
+                Token::Enum => self.parse_decl_enum()?,
                 _ => return Err(Error::Unknown),
             };
             ret.push(decl);
@@ -237,12 +256,6 @@ impl Parser {
         self.advance();
 
         token = self.get_token()?;
-        if token != Token::Colon {
-            return Err(Error::ExpectedColon);
-        }
-        self.advance();
-
-        token = self.get_token()?;
         if token != Token::Identifier {
             return Err(Error::ExpectedIdentifier);
         }
@@ -264,7 +277,18 @@ impl Parser {
     }
 
     fn parse_enum_variants(&mut self) -> Result<Vec<EnumVariant>> {
-        Err(Error::Unimplemented("hu"))
+        let mut enum_variants = vec![];
+        while self.get_token()? != Token::CloseBlock {
+            if self.get_token()? == Token::Comma && !enum_variants.is_empty() {
+                self.advance();
+            } else if !enum_variants.is_empty() {
+                return Err(Error::ExpectedComma);
+            }
+            let enum_variant = self.parse_enum_variant()?;
+            enum_variants.push(enum_variant);
+        }
+        self.advance();
+        Ok(enum_variants)
     }
 
     #[allow(dead_code)]
@@ -282,7 +306,7 @@ impl Parser {
             Token::OpenBlock => {
                 self.advance();
                 token = self.get_token()?;
-                let mut members = HashMap::new();
+                let mut members = BTreeMap::new();
                 while token != Token::CloseBlock {
                     if token != Token::Identifier {
                         return Err(Error::ExpectedIdentifier);
@@ -302,19 +326,23 @@ impl Parser {
                     if token == Token::Comma {
                         self.advance();
                         token = self.get_token()?;
-                    } else {
-                        break;
                     }
                 }
+
+                self.advance();
 
                 EnumVariant::Cont(ident_string, members)
             }
             Token::OpenParan => {
                 if let Type::Tuple(types) = self.parse_type()? {
+                    token = self.get_token()?;
                     EnumVariant::Tuple(ident_string, types)
                 } else {
                     return Err(Error::Unknown);
                 }
+            }
+            Token::Comma => {
+                EnumVariant::Empty(ident_string)
             }
             _ => {
                 if token != Token::Comma && token != Token::CloseBlock {
@@ -553,8 +581,25 @@ impl Parser {
     }
 
     fn parse_type(&mut self) -> Result<Type> {
-        let token = self.get_token()?;
+        let mut token = self.get_token()?;
         let ret = match token {
+            Token::OpenParan => {
+                self.advance();
+                let mut types = vec![];
+                token = self.get_token()?;
+                while token != Token::CloseParan {
+                    let var_type = self.parse_type()?;
+                    token = self.get_token()?;
+                    if token == Token::Comma {
+                        self.advance();
+                    } else if token != Token::CloseParan {
+                        return Err(Error::ExpectedType);
+                    }
+                    types.push(var_type);
+                }
+                self.advance();
+                Type::Tuple(types)
+            }
             Token::Ref => {
                 self.advance();
                 let inner_type = self.parse_type()?;
@@ -617,7 +662,7 @@ impl Parser {
 
         token = self.get_token()?;
 
-        let mut member_vars = HashMap::new();
+        let mut member_vars = BTreeMap::new();
         let mut member_fns = vec![];
 
         while token != Token::CloseBlock {

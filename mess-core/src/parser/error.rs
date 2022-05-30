@@ -18,6 +18,7 @@ pub enum Error {
     ExpectedIntf,
     ExpectedEnum,
     ExpectedCont,
+    ExpectedComma,
     ExpectedOpenBlock,
     ExpectedOn,
     ExpectedAssign,

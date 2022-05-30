@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use super::Token;
 
@@ -12,6 +12,12 @@ pub enum Declaration {
         arguments: Vec<(String, Type)>,
         body: Option<Vec<Statement>>,
     },
+    StaticVariable {
+        public: bool,
+        name: String,
+        r#type: Type,
+        expr: Expression
+    },
     Module {
         name: String,
         decl_list: Vec<Declaration>,
@@ -19,7 +25,7 @@ pub enum Declaration {
     Container {
         public: bool,
         name: String,
-        member_variables: HashMap<String, Type>,
+        member_variables: BTreeMap<String, Type>,
         member_functions: Vec<ContainerFunction>
     },
     Interface {
@@ -54,7 +60,7 @@ pub struct InterfaceFunction {
 pub enum EnumVariant {
     Empty(String),
     Tuple(String, Vec<Type>),
-    Cont(String, HashMap<String, Type>),
+    Cont(String, BTreeMap<String, Type>),
 }
 
 #[derive(Debug, Clone)]

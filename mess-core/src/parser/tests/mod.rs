@@ -1,12 +1,15 @@
-mod intf;
+//mod intf;
 
-mod cont;
+//mod cont;
+
+mod r#enum;
 
 use crate::{parser::Parser, codegen::decl};
 use std::{result::Result as StdResult, error::Error};
 
 type Result = StdResult<(), Box<dyn Error>>;
 
+/*
 #[test]
 fn test_parse_empty_fn() {
     let code = "
@@ -84,3 +87,4 @@ fn test_parse_complex_on() -> Result {
     println!("{:#?}", decl_list);
     Ok(())
 }
+*/

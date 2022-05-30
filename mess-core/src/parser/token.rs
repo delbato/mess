@@ -10,6 +10,13 @@ pub enum Token {
     #[token("mod")]
     Mod,
 
+    /// var decl token
+    #[token("var")]
+    Var,
+
+    #[token("static")]
+    Static,
+
     #[token("cont")]
     Cont,
 
@@ -165,10 +172,6 @@ pub enum Token {
 
     #[regex("#.*\n", logos::skip)]
     HashLineComment,
-
-    /// var decl token
-    #[token("var")]
-    Var,
 
     #[regex(r"\s+", logos::skip)]
     Whitespace,

@@ -31,6 +31,7 @@ use mess_core::{
     },
     util::uid::UIDGenerator,
 };
+use mess_vm_derive::asm;
 
 use crate::{
     codegen::{
@@ -81,6 +82,7 @@ impl CompilerTrait for Compiler {
 impl Default for Compiler {
     fn default() -> Self {
         let mod_def_stack = VecDeque::new();
+        let x = asm!(&self.assembler);
         Self {
             mod_def_stack,
             uid_gen: UIDGenerator::new(),

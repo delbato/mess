@@ -28,7 +28,7 @@ impl Engine {
     pub fn new_vm(stack_size: usize) -> Engine {
         Engine {
             declarator: Declarator::default(),
-            comp_exec_pair: CompExecPair::VM(VmCompiler::new(), VmExec::new(stack_size)),
+            comp_exec_pair: CompExecPair::VM(VmCompiler::default(), VmExec::new(stack_size)),
         }
     }
 

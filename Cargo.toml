@@ -4,6 +4,7 @@ members = [
     "mess-jit",
     "mess-core",
     "mess-vm",
+    "mess-vm/derive",
     "mess-sys",
     "mess-api",
     "mess-api/derive",

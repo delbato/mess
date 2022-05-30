@@ -5,6 +5,8 @@ use mess_vm::{
     Core as VmCore
 };
 
+use crate::error::Error;
+
 pub enum CompExecPair {
     #[cfg(feature = "exec-vm")]
     VM(VmCompiler, VmCore),
@@ -12,10 +14,11 @@ pub enum CompExecPair {
 
 impl CompExecPair {
     /// Compiles a declaration list according to the chosen backend
-    pub fn compile(&mut self, decl_list: &[Declaration]) -> Result<(), ()> {
+    pub fn compile(&mut self, decl_list: &[Declaration]) -> Result<(), Error> {
         match self {
             #[cfg(feature = "exec-vm")]
-            CompExecPair::VM(compiler, _) => compiler.compile(decl_list)
-        }
+            CompExecPair::VM(compiler, _) => compiler.compile(decl_list)?
+        };
+        Ok(())
     }
 }

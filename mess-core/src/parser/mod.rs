@@ -377,7 +377,6 @@ impl Parser {
             return Err(Error::ExpectedIdentifier);
         }
         let ident_string = self.get_value()?;
-        println!("FN ident name: {}", ident_string);
         self.advance();
 
         token = self.get_token()?;
@@ -880,7 +879,6 @@ impl Parser {
         let var_expr = self.parse_expr(&[Token::Semicolon])?;
 
         token = self.get_token()?;
-        println!("Token after var expr parse: {:?}", token);
 
         Ok(Statement::VarDeclaration {
             name: var_name,
@@ -1085,8 +1083,6 @@ impl Parser {
         }
 
         let _expr: Option<Expression> = None;
-        //println!("{:#?}", out_queue);
-
         while out_queue.len() > 0 {
             let expr_output = out_queue.pop_front().unwrap();
             match expr_output {
@@ -1098,7 +1094,6 @@ impl Parser {
                         let expr = Expression::Binary(Box::new(lhs_expr), op, Box::new(rhs_expr));
                         out_stack.push_front(expr);
                     } else {
-                        //println!("Expression is unary!");
                         let op_expr = out_stack.pop_front().unwrap();
                         let expr = Expression::Unary(op, Box::new(op_expr));
                         out_stack.push_front(expr);
@@ -1106,7 +1101,6 @@ impl Parser {
                 }
             };
         }
-        //println!("{:#?}", out_stack);
 
         if out_stack.len() > 1 {
             return Err(Error::MalformedExpression);

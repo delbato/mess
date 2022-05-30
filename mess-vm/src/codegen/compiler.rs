@@ -60,6 +60,7 @@ pub struct Compiler {
 
 impl CompilerTrait for Compiler {
     type Output = OutputVM;
+    type Error = Error;
 
     fn get_output(&mut self) -> Self::Output {
         let mut assembler = Assembler::new();
@@ -69,11 +70,11 @@ impl CompilerTrait for Compiler {
             .with_code(code)
     }
 
-    fn compile(&mut self, decl_list: &[Declaration]) -> StdResult<(), ()> {
-        self.declarator.declare(decl_list)?;
-        let (root_mod_def, _) = self.declarator.get_result()?;
+    fn compile(&mut self, decl_list: &[Declaration]) -> StdResult<(), Self::Error> {
+        self.declarator.declare(decl_list).map_err(|_| Error::Unknown)?;
+        let (root_mod_def, _) = self.declarator.get_result().map_err(|_| Error::Unknown)?;
         self.set_root_module(root_mod_def);
-        self.compile_decl_list(decl_list).map_err(|_| ())
+        self.compile_decl_list(decl_list)
     }
 }
 

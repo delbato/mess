@@ -19,8 +19,8 @@ pub struct Assembler {
     tag_counter: u64,
 }
 
-impl Assembler {
-    pub fn new() -> Assembler {
+impl Default for Assembler {
+    fn default() -> Self {
         Assembler {
             data: Vec::new(),
             instructions: Vec::new(),
@@ -30,7 +30,9 @@ impl Assembler {
             tag_counter: 0,
         }
     }
+}
 
+impl Assembler {
     pub fn push_label(&mut self, label: String) {
         self.labels.insert(label, self.instructions.len());
     }

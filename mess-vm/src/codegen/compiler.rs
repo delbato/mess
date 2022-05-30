@@ -63,7 +63,7 @@ impl CompilerTrait for Compiler {
     type Error = Error;
 
     fn get_output(&mut self) -> Self::Output {
-        let mut assembler = Assembler::new();
+        let mut assembler = Assembler::default();
         std::mem::swap(&mut assembler, &mut self.assembler);
         let code = assembler.build();
         OutputVM::new()
@@ -78,19 +78,21 @@ impl CompilerTrait for Compiler {
     }
 }
 
-impl Compiler {
-    pub fn new() -> Self {
-        let mut mod_def_stack = VecDeque::new();
+impl Default for Compiler {
+    fn default() -> Self {
+        let mod_def_stack = VecDeque::new();
         Self {
             mod_def_stack,
             uid_gen: UIDGenerator::new(),
             stack_ctx_stack: VecDeque::new(),
             fn_ctx_stack: VecDeque::new(),
-            assembler: Assembler::new(),
+            assembler: Assembler::default(),
             declarator: Declarator::default(),
         }
     }
+}
 
+impl Compiler {
     pub fn set_root_module(&mut self, module_def: ModuleDef) {
         self.mod_def_stack.clear();
         self.mod_def_stack.push_front(module_def);
@@ -171,8 +173,7 @@ impl Compiler {
                 }
             };
 
-            for i in 1..mod_path.len() - 1 {
-                let mod_name = mod_path[i];
+            for mod_name in mod_path.iter() {
                 if mod_def.has_module(mod_name) {
                     mod_def = mod_def.get_module(mod_name).map_err(|_| Error::Unknown)?;
                 }
@@ -664,7 +665,7 @@ impl Compiler {
             Expression::BoolLiteral(_) => Type::Bool,
             Expression::FloatLiteral(_) => Type::Float,
             Expression::Variable(var_name) => self.get_var_type(var_name)?,
-            Expression::StringLiteral(_) => Type::Ref(Box::new(Type::String)),
+            Expression::StringLiteral(_) => Type::Ref(Box::new(Type::Str)),
             Expression::Condition { .. } => self.get_expr_type_cond(expr)?,
             Expression::Unary(op, op_expr) => match op {
                 Operator::Not => Type::Bool,

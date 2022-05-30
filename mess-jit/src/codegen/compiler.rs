@@ -640,7 +640,7 @@ impl Compiler {
             Expression::BoolLiteral(_) => Type::Bool,
             Expression::FloatLiteral(_) => Type::Float,
             Expression::Variable(var_name) => self.get_var_type(var_name)?,
-            Expression::StringLiteral(_) => Type::Ref(Box::new(Type::String)),
+            Expression::StringLiteral(_) => Type::Ref(Box::new(Type::Str)),
             Expression::Unary(op, op_expr) => match op {
                 Operator::Not => Type::Bool,
                 Operator::Ref => {

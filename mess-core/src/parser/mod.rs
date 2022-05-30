@@ -620,7 +620,7 @@ impl Parser {
                     "int" => Type::Int,
                     "float" => Type::Float,
                     "bool" => Type::Bool,
-                    "string" => Type::String,
+                    "str" => Type::Str,
                     _ => return Err(Error::ExpectedType),
                 }
             }

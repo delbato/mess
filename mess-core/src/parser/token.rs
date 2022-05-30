@@ -86,7 +86,7 @@ pub enum Token {
     #[token("=")]
     Assign,
 
-    #[regex("int|bool|float|string")]
+    #[regex("int|bool|float|str")]
     PrimitiveType,
 
     #[token("<")]

@@ -201,7 +201,7 @@ pub enum Type {
     Int,
     Float,
     Bool,
-    String,
+    Str,
     This,
     Tuple(Vec<Type>),
     Named(String),

@@ -37,14 +37,37 @@ impl Engine {
     }
 
     /// Runs a script file at the given path
-    pub fn run_file<'p, P: Into<&'p Path>>(&mut self, file_path: P) -> Result<(), ()> {
-        let file_path = file_path.into();
-        let mut file_content = String::new();
-        let mut file = File::open(file_path).map_err(|_| ())?;
-        file.read_to_string(&mut file_content).map_err(|_| ())?;
-        let mut parser = Parser::new(file_content);
+    pub fn run_file<P: AsRef<Path>>(&mut self, file_path: P) -> Result<(), ()> {
+        let file_path = file_path.as_ref();
+        let mut parser = Parser::new_with_path(file_path);
         let decl_list = parser.parse().map_err(|_| ())?;
         self.comp_exec_pair.compile(&decl_list)?;
         Ok(())
     }
+
+    /// Runs a piece of code
+    pub fn run_code<S: ToString>(&mut self, code: S) -> Result<(), ()> {
+        let mut parser = Parser::new(code);
+        let decl_list = parser.parse().map_err(|_| ())?;
+        self.comp_exec_pair.compile(&decl_list)?;
+        Ok(())
+    }
+
+    /// Loads a script file from the given path
+    pub fn load_file<P: AsRef<Path>>(&mut self, file_path: P) -> Result<(), ()> {
+        let file_path = file_path.as_ref();
+        let mut parser = Parser::new_with_path(file_path);
+        let decl_list = parser.parse().map_err(|_| ())?;
+        self.comp_exec_pair.compile(&decl_list)?;
+        Ok(())
+    }
+
+    /// Loads a piece of code
+    pub fn load_code<S: ToString>(&mut self, code: S) -> Result<(), ()> {
+        let mut parser = Parser::new(code);
+        let decl_list = parser.parse().map_err(|_| ())?;
+        self.comp_exec_pair.compile(&decl_list)?;
+        Ok(())
+    }
+
 }

@@ -1,0 +1,4 @@
+fun main() {
+    var x = 4;
+    std::print("Hello world!");
+}

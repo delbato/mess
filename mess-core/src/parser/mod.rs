@@ -73,6 +73,10 @@ impl Parser {
         let lexer = Token::lexer(source.as_ref());
         let tokens: Vec<(Token, Range<usize>)> =
             lexer.spanned().collect();
+
+        for (token, range) in tokens.iter() {
+            println!("{:?}: {}", token, &source[range.clone()]);
+        }
         Self {
             source,
             tokens,
@@ -1126,6 +1130,10 @@ impl Parser {
                 let bool_val = str_val.parse().map_err(|_| Error::Unknown)?;
                 Expression::BoolLiteral(bool_val)
             }
+            Token::StringLiteral => {
+                let str_val = self.get_value()?;
+                Expression::StringLiteral(str_val)
+            },
             Token::Identifier => {
                 let before_pos = self.token_pos;
                 self.parse_expr_call().or_else(|_e| {

@@ -1,7 +1,7 @@
 use std::{path::PathBuf, process::exit};
 
 use clap::{Parser, ArgEnum};
-use mess::engine::Engine;
+use mess::{engine::Engine, error::Error};
 
 #[derive(Parser)]
 #[clap(name = "mess")]
@@ -23,7 +23,7 @@ enum ExecMode {
     Jit
 }
 
-fn main() {
+fn main() -> Result<(), Error> {
     let run_args = RunArgs::parse();
     if let ExecMode::Jit = run_args.exec {
         unimplemented!("JIT not implemented yet!");
@@ -34,8 +34,5 @@ fn main() {
             Engine::new_vm(run_args.stack_size)
         }
     };
-    if engine.run_file(&run_args.script_file).is_err() {
-        eprintln!("Error executing mess script.");
-        exit(-1);
-    }
+    engine.run_file(&run_args.script_file)
 }

@@ -155,11 +155,11 @@ pub enum Token {
     #[token("}")]
     CloseBlock,
 
+    #[regex(r#""([^"\\]|\\[\s\S])*""#)]
+    StringLiteral,
+
     #[regex("[a-zA-Z_][a-zA-Z0-9_]*")]
     Identifier,
-
-    #[regex("\".*\"")]
-    StringLiteral,
 
     #[regex(r"[0-9]+")]
     IntLiteral,

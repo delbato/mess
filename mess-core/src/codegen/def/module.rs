@@ -1,5 +1,9 @@
 use std::collections::HashMap;
 
+use mess_api::prelude::Module;
+
+use crate::util::uid::UIDGenerator;
+
 use super::FunctionDef;
 
 #[derive(Clone)]
@@ -54,5 +58,21 @@ impl ModuleDef {
 
     pub fn get_module(&self, mod_name: &str) -> Result<&ModuleDef, ()> {
         self.modules.get(mod_name).ok_or(())
+    }
+
+    pub fn from_api(uid_gen: &mut UIDGenerator, mod_path: &str, api_mod: Module) -> Self {
+        let fn_defs: HashMap<String, FunctionDef> = api_mod.functions.into_iter()
+            .map(|(fn_name, api_fun)| {
+                let fn_uid = uid_gen.generate();
+                let fn_def = FunctionDef::from_api(fn_uid, mod_path, api_fun);
+                (fn_name, fn_def)
+            })
+            .collect();
+        Self {
+            name: api_mod.name.clone(),
+            canon_name: format!("{}{}", mod_path, api_mod.name),
+            functions: fn_defs,
+            modules: HashMap::new()
+        }
     }
 }

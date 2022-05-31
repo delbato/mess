@@ -13,6 +13,7 @@ pub union Register {
     pub int64: i64,
     pub float: f32,
     pub boolean: bool,
+    pub bytes: [u8; 8]
 }
 
 impl Debug for Register {
@@ -149,4 +150,15 @@ impl RegisterAccess<usize> for Register {
             self.uint64 -= item as u64;
         }
     }
+}
+
+impl RegisterAccess<[u8; 8]> for Register {
+    fn get_val(&self) -> [u8; 8] {
+        unsafe { self.bytes }
+    }
+    fn set_val(&mut self, item: [u8; 8]) {
+        self.bytes = item;
+    }
+    fn inc_val(&mut self, item: [u8; 8]) {}
+    fn dec_val(&mut self, item: [u8; 8]) {}
 }

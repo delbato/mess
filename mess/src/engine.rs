@@ -14,6 +14,8 @@ use mess_vm::{
     Core as VmExec,
 };
 
+use mess_api::prelude::Module;
+
 use crate::{comp_exec::CompExecPair, error::Error};
 
 
@@ -35,7 +37,12 @@ impl Engine {
     /// Creates a new engine with the x64 JIT backend
     #[cfg(feature = "exec-jit")]
     pub fn new_jit() -> Engine {
-        unimplemented!("Not implemented yet")
+        unimplemented!("Not implemented yet");
+    }
+
+    /// Registers a foreign module
+    pub fn register_module(&mut self, module: Module) -> Result<(), Error> {
+        unimplemented!("Not implemented yet");
     }
 
     /// Runs a script file at the given path

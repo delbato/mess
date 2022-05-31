@@ -7,6 +7,7 @@ use std::{
     error::Error as StdError
 };
 
+use mess_api::prelude::Module;
 use mess_core::{
     codegen::{
         ctx::{
@@ -77,12 +78,16 @@ impl CompilerTrait for Compiler {
         self.set_root_module(root_mod_def);
         self.compile_decl_list(decl_list)
     }
+
+    fn register_module(&mut self, module: Module) -> StdResult<(), Self::Error> {
+        unimplemented!("Not implemented yet!");
+    }
 }
 
 impl Default for Compiler {
     fn default() -> Self {
         let mod_def_stack = VecDeque::new();
-        let x = asm!(&self.assembler);
+        let x = asm!(&mut self.assembler);
         Self {
             mod_def_stack,
             uid_gen: UIDGenerator::new(),

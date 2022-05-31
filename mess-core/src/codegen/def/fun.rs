@@ -1,3 +1,5 @@
+use mess_api::prelude::Function;
+
 use crate::parser::ast::{Type, Declaration};
 
 #[derive(Clone)]
@@ -29,6 +31,22 @@ impl FunctionDef {
                 arguments: arguments.clone(),
             }),
             _ => Err(()),
+        }
+    }
+
+    pub fn from_api(
+        label_uid: u64,
+        module_path: &str,
+        api_fun: Function
+    ) -> Self {
+        Self {
+            label_uid,
+            name: api_fun.name.clone(),
+            canon_name: format!("{}{}", module_path, api_fun.name),
+            returns: api_fun.returns.into(),
+            arguments: api_fun.args.into_iter()
+                .map(|fn_arg| (String::new(), fn_arg.into()))
+                .collect()
         }
     }
 }

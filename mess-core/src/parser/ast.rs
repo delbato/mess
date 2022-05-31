@@ -1,5 +1,7 @@
 use std::collections::BTreeMap;
 
+use mess_api::prelude::Type as ApiType;
+
 use super::Token;
 
 #[derive(Debug, Clone)]
@@ -209,4 +211,18 @@ pub enum Type {
     Deref(Box<Type>),
     UnsizedArray(Box<Type>),
     SizedArray(Box<Type>),
+}
+
+impl From<ApiType> for Type {
+    fn from(api_type: ApiType) -> Self {
+        match api_type {
+            ApiType::Bool => Type::Bool,
+            ApiType::Void => Type::Void,
+            ApiType::Float => Type::Float,
+            ApiType::Int => Type::Int,
+            ApiType::Str => Type::Str,
+            ApiType::Named(name) => Type::Named(name),
+            _ => unimplemented!("Not implemented yet")
+        }
+    }
 }

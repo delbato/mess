@@ -74,9 +74,10 @@ impl Parser {
         let tokens: Vec<(Token, Range<usize>)> =
             lexer.spanned().collect();
 
-        for (token, range) in tokens.iter() {
+        /*for (token, range) in tokens.iter() {
             println!("{:?}: {}", token, &source[range.clone()]);
-        }
+        }*/
+        
         Self {
             source,
             tokens,

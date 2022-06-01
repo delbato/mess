@@ -7,7 +7,7 @@ use mess::{engine::Engine, error::Error};
 #[clap(name = "mess")]
 #[clap(author, version, about)]
 struct RunArgs {
-    #[clap(help = "Execution mode",short, long, arg_enum, default_value_t=ExecMode::Vm)]
+    #[clap(help = "Execution mode", short, long, arg_enum, default_value_t=ExecMode::Vm)]
     exec: ExecMode,
     #[clap(help = "Stack size of the interpeter. Unused with JIT backend.", long, default_value_t=10*1024*1024)]
     stack_size: usize,
@@ -25,11 +25,11 @@ enum ExecMode {
 
 fn main() -> Result<(), Error> {
     let run_args = RunArgs::parse();
-    if let ExecMode::Jit = run_args.exec {
-        unimplemented!("JIT not implemented yet!");
-    }
     let mut engine = match run_args.exec {
-        ExecMode::Jit => unimplemented!("JIT not implemented yet!"),
+        ExecMode::Jit => {
+            println!("JIT not implemented yet!");
+            return Ok(());
+        },
         ExecMode::Vm => {
             Engine::new_vm(run_args.stack_size)
         }

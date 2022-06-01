@@ -90,7 +90,7 @@ impl Default for Compiler {
         let x = asm!(&mut self.assembler);
         Self {
             mod_def_stack,
-            uid_gen: UIDGenerator::new(),
+            uid_gen: UIDGenerator::default(),
             stack_ctx_stack: VecDeque::new(),
             fn_ctx_stack: VecDeque::new(),
             assembler: Assembler::default(),

@@ -12,14 +12,16 @@ pub struct UIDGenerator {
     rng: ThreadRng,
 }
 
-impl UIDGenerator {
-    pub fn new() -> UIDGenerator {
+impl Default for UIDGenerator {
+    fn default() -> UIDGenerator {
         UIDGenerator {
             uid_set: HashSet::new(),
             rng: thread_rng(),
         }
     }
+}
 
+impl UIDGenerator {
     pub fn generate(&mut self) -> u64 {
         let mut uid = self.rng.next_u64();
         while self.uid_set.contains(&uid) {

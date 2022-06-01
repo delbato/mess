@@ -920,7 +920,7 @@ impl Core {
 
     /// Inserts a foreign pointer
     pub fn insert_foreign_ptr<T>(&mut self, item: Arc<Mutex<T>>) -> CoreResult<u64> {
-        let mut uid_gen = UIDGenerator::new();
+        let mut uid_gen = UIDGenerator::default();
 
         let mut addr = Address::new(uid_gen.generate(), AddressType::Foreign);
         while self.foreign_pointers.contains_key(&addr.raw_address) {

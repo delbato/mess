@@ -6,9 +6,6 @@ pub mod token;
 
 pub mod error;
 
-#[cfg(test)]
-mod tests;
-
 use std::{
     collections::{
         HashMap,
@@ -77,7 +74,7 @@ impl Parser {
         /*for (token, range) in tokens.iter() {
             println!("{:?}: {}", token, &source[range.clone()]);
         }*/
-        
+
         Self {
             source,
             tokens,

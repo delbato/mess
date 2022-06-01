@@ -15,3 +15,4 @@ derivative = "2.2.0"
 derive = [
     "mess-api-derive"
 ]
+exec-vm = []

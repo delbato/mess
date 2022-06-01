@@ -9,3 +9,6 @@ pub mod parser;
 pub mod codegen;
 
 pub mod util;
+
+#[cfg(test)]
+mod tests;

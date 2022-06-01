@@ -14,13 +14,15 @@ mess-jit = { path = "../mess-jit", optional = true }
 
 [features]
 default = [
-    "exec-vm"
+    "exec-vm",
+    "exec-jit"
 ]
 derive = [
     "mess-api/derive"
 ]
 exec-vm = [
-    "mess-vm"
+    "mess-vm",
+    "mess-api/exec-vm"
 ]
 exec-jit = [
     "mess-jit"

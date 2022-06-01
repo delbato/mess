@@ -254,9 +254,9 @@ impl Compiler {
     }
 
     pub fn compile_decl_fn(&mut self, decl: &Declaration) -> Result<()> {
-        let (name, ret_type, args, stmt_list) = match decl {
+        let (name, ret_type, args, public, external, stmt_list) = match decl {
             Declaration::Function {
-                public: false,
+                public,
                 external,
                 name,
                 arguments,
@@ -266,12 +266,12 @@ impl Compiler {
                 if body.is_none() {
                     return Ok(());
                 }
-                (name, returns, arguments, body.as_ref().unwrap())
+                (name, returns, arguments, public, external, body.as_ref().unwrap())
             }
             _ => return Err(Error::Unknown),
         };
         let full_fn_name = self.get_module_path()? + "::" + name;
-        self.assembler.push_label(full_fn_name);
+        self.assembler.push_label(full_fn_name.clone());
         // MOVA sp, bp
         let mov_rbp_rsp = Instruction::new(Opcode::MOVA)
             .with_operand::<u8>(Register::SP.into())
@@ -328,6 +328,13 @@ impl Compiler {
         *stack_inc_instr_ref = stack_inc_instr;
 
         self.assembler.push_instr(Instruction::new(Opcode::HALT));
+
+        let fn_uid = stack_ctx_uid;
+        let fn_name = full_fn_name;
+
+        if *external {
+            // TODO: Handle external function exposure
+        }
 
         unimplemented!("TODO: Implement");
     }

@@ -132,7 +132,7 @@ impl Parser {
                 break;
             }
 
-            while [Token::Pub, Token::Ext].contains(&token) {
+            if [Token::Pub, Token::Ext].contains(&token) {
                 token = self.peek_token(1)?;
             }
             
@@ -365,10 +365,11 @@ impl Parser {
 
         let mut external = false;
         let mut public = false;
-        while [Token::Pub, Token::Ext].contains(&token) {
+        if [Token::Pub, Token::Ext].contains(&token) {
             external = token == Token::Ext;
             public = token == Token::Pub;
             self.advance();
+            token = self.get_token()?;
         }
 
         if token != Token::Fun {

@@ -7,6 +7,7 @@ use std::{
 };
 
 use mess_api::prelude::Function;
+use mess_core::artifact::Artifact;
 
 #[derive(PartialEq, Debug)]
 pub struct Output {
@@ -55,3 +56,6 @@ impl Output {
         self.code.len()
     }
 }
+
+
+impl Artifact for Output {}

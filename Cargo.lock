@@ -261,6 +261,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "mess-chip8"
+version = "0.1.0"
+dependencies = [
+ "mess-core",
+]
+
+[[package]]
 name = "mess-cli"
 version = "0.1.0"
 dependencies = [

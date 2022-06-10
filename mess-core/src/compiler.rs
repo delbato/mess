@@ -3,10 +3,11 @@ use std::error::Error;
 
 use mess_api::prelude::Module;
 
+use crate::artifact::Artifact;
 use crate::parser::ast::Declaration;
 
 pub trait Compiler {
-    type Output: Any;
+    type Output: Artifact;
     type Error: Error;
 
     fn compile(&mut self, decl_list: &[Declaration]) -> Result<(), Self::Error>;

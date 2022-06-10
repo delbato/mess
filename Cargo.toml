@@ -3,10 +3,11 @@ members = [
     "mess",
     "mess-jit",
     "mess-core",
+    "mess-cli",
     "mess-vm",
     "mess-vm/derive",
     "mess-sys",
     "mess-api",
     "mess-api/derive",
-    "mess-cli"
+    "mess-chip8"
 ]

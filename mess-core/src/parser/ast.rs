@@ -1,8 +1,21 @@
-use std::collections::BTreeMap;
+use std::{collections::{BTreeMap}, ops::{Range, Deref}};
 
 use mess_api::prelude::Type as ApiType;
 
 use super::Token;
+
+pub struct AstItem<T> {
+    pub item: T,
+    pub range: Range<usize>
+}
+
+impl<T> Deref for AstItem<T> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        &self.item
+    }
+}
 
 #[derive(Debug, Clone)]
 pub enum Declaration {

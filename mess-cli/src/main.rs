@@ -7,20 +7,22 @@ use mess::{engine::Engine, error::Error};
 #[clap(name = "mess")]
 #[clap(author, version, about)]
 struct RunArgs {
-    #[clap(help = "Execution mode", short, long, arg_enum, default_value_t=ExecMode::Vm)]
-    exec: ExecMode,
-    #[clap(help = "Stack size of the interpeter. Unused with JIT backend.", long, default_value_t=10*1024*1024)]
-    stack_size: usize,
-    #[clap(help = "Supplemental options", short, long, parse(from_str = parse_options), number_of_values=1)]
-    options: HashMap<String, String>,
+    #[clap(help = "Execution/compilation target", short, long, arg_enum, default_value_t=Target::Vm)]
+    target: Target,
+    #[clap(help = "Supplemental options, key=value comma-seperated", short, long, parse(from_str = parse_options), number_of_values=1)]
+    options: Option<HashMap<String, String>>,
+    #[clap(help = "Path to the output file, triggers AOT-only if supplied", short = 'O', long)]
+    output: Option<PathBuf>,
     #[clap(help = "Path to the script file to execute", index = 1)]
     script_file: PathBuf
 }
 
 #[derive(Clone, ArgEnum)]
-enum ExecMode {
+enum Target {
     #[clap(help = "Run with the bytecode interpeter")]
     Vm,
+    #[clap(help = "Run with the CHIP-8 backend")]
+    Chip8,
     #[clap(help = "Run with the AMD64 JIT compiler")]
     Jit
 }
@@ -58,13 +60,17 @@ fn parse_options(s: &str) -> HashMap<String, String> {
 fn main() -> Result<(), Error> {
     let run_args = RunArgs::parse();
     println!("Options: {:#?}", run_args.options);
-    let mut engine = match run_args.exec {
-        ExecMode::Jit => {
+    let mut engine = match run_args.target {
+        Target::Jit => {
             println!("JIT not implemented yet!");
             return Ok(());
         },
-        ExecMode::Vm => {
-            Engine::new_vm(run_args.stack_size)
+        Target::Vm => {
+            Engine::new_vm(1024)
+        },
+        Target::Chip8 => {
+            println!("CHIP-8 not implemented yet!");
+            return Ok(())
         }
     };
     engine.run_file(&run_args.script_file)
